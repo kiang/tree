@@ -42,11 +42,11 @@ var styleLines = new ol.style.Style({
 
 var styleAreas = new ol.style.Style({
   stroke: new ol.style.Stroke({
-      color: 'rgba(86,113,228,0.7)',
+      color: 'rgba(0,64,0,0.7)',
       width: 3
   }),
   fill: new ol.style.Fill({
-      color: 'rgba(86,113,228,0.3)',
+      color: 'rgba(0,64,0,0.3)',
   })
 });
 
@@ -63,7 +63,7 @@ var baseLayer = new ol.layer.Tile({
         matrixSet: 'EPSG:3857',
         format: 'image/png',
         url: 'https://wmts.nlsc.gov.tw/wmts',
-        layer: 'EMAP',
+        layer: 'PHOTO_MIX',
         tileGrid: new ol.tilegrid.WMTS({
             origin: ol.extent.getTopLeft(projectionExtent),
             resolutions: resolutions,
@@ -171,44 +171,18 @@ map.on('singleclick', function(evt) {
   $('#sidebar-main-block').html('');
   map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
     var p = feature.getProperties();
-    var message = '<table class="table table-dark table-bordered">';
-    for(k in p) {
-      if(k !== 'geometry') {
-        message += '<tr><td>' + k + '</td><td>' + p[k] + '</td></tr>';
-      }
+    var message = '';
+    if(p.LCODE_C1) {
+      message += '<h2>土地資訊</h2>';
+      message += '<table class="table table-dark table-bordered">';
+      message += '<tr><td>行政區</td><td>' + p.county + p.town + '</td></tr>';
+      message += '<tr><td>土地所有人</td><td>' + p.land_onwer + '</td></tr>';
+      message += '<tr><td>管理單位</td><td>' + p.land_manger + '</td></tr>';
+      message += '</table>';
     }
-    message += '</table>';
     $('#sidebar-main-block').html(message);
     sidebar.open('home');
   });
-});
-
-$('a.btnShowAll').click(function() {
-  sidebar.close();
-  var baseExtent = ol.extent.createEmpty();
-  map.getLayers().forEach(function(layer) {
-    if(layer instanceof ol.layer.Vector) {
-      ol.extent.extend(baseExtent, layer.getSource().getExtent());
-    }
-  });
-  map.getView().fit(baseExtent);
-
-  for(k in riverLayers) {
-    riverLayers[k].getSource().forEachFeature(function(f) {
-      if(f.get('fType') === 'green') {
-        f.setStyle(pointGreenStyle);
-      } else {
-        f.setStyle(pointRedStyle);
-      }
-    })
-  }
-  targetLayer.getSource().forEachFeature(function(f) {
-    var fStyle = pointStyle.clone();
-    fStyle.getText().setText(f.get('name'));
-    f.setStyle(fStyle);
-  });
-
-  return false;
 });
 
 var emptyStyle = new ol.style.Style({ image: '' });
